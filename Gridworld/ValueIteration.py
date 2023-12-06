@@ -10,7 +10,7 @@ def runValueIteration(states, gamma, theta):
             for j in range(0, len(states[i])):
                 state = states[i][j]
                 initialValue = state.value
-                bestAction = state.action
+                #bestAction = state.action
                 bestValue = 0
 
                 # Take all actions
@@ -32,7 +32,7 @@ def runValueIteration(states, gamma, theta):
                     if value > bestValue:
                         bestAction = action
                         bestValue = value
-                state.action = bestAction
+                #state.action = bestAction
                 tempValues[i][j] = bestValue
                 finalValue = bestValue
 

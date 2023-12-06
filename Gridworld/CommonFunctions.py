@@ -58,10 +58,19 @@ def printActionValues(states):
     for i in range(0, len(states)):
         for j in range(0, len(states[i])):
             state = states[i][j]
-            print("%.4f" % round(max(state.qValue), 4), end="\t")
+            state.qValue = [round(num, 4) for num in state.qValue]
+            print(state.qValue, end="\t")
         print(" ")
     print(" ")
 
+def printMaxActionValues(states):
+    for i in range(0, len(states)):
+        for j in range(0, len(states[i])):
+            state = states[i][j]
+            state.qValue = [round(num, 4) for num in state.qValue]
+            print("%.4f" % max(state.qValue), end="\t")
+        print(" ")
+    print(" ")
 
 def printStateValues(states):
     for i in range(0, len(states)):
@@ -84,7 +93,7 @@ def printPolicy(states):
     for i in range(0, len(states)):
         for j in range(0, len(states[i])):
             state = states[i][j]
-            action = state.action
+            action = state.qValue.index(max(state.qValue))
             if i == 2 and j == 2:
                 print(" ", end=" ")
                 continue

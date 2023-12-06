@@ -7,17 +7,22 @@ class GridWorldState:
         self.state = state
         self.stateType = stateType
         self.actionCount = actionCount
-        self.action = None
+        #self.action = None
         self.actionProbabilities = [0.25, 0.25, 0.25, 0.25]
         self.transition = [None] * actionCount
         self.value = 0
         self.oldValue = 0
         self.qValue = [10, 10, 10, 10]
         self.reward = 0
+        self.Model = [{},{},{},{}]  # next_state:visitCount for each state.action
+
+    def __lt__(self, other):
+        return (self.state[0] + self.state[1]) < (other.state[0] + other.state[1])
+
 
     # left(0),up(1),down(2),right(3) (policies are stochastic)
     def takeAction(self):
-        self.action = numpy.random.choice(numpy.arange(0, 4), p=self.actionProbabilities)
+        return numpy.random.choice(numpy.arange(0, 4), p=self.actionProbabilities)
 
     def setActionProbabilities(self, epsilon):
         maxQ = max(self.qValue)
@@ -36,9 +41,9 @@ class GridWorldState:
             self.transition[action] = stateProbLists[action]
 
     # [left,up,down,right,same] -> [0,1,2,3,4]
-    def getNextState(self, move=None):
+    def getNextState(self, action, move=None):
         if move is None:
-            move = numpy.random.choice(numpy.arange(0, 5), p=self.transition[self.action])
+            move = numpy.random.choice(numpy.arange(0, 5), p=self.transition[action])
         newX = self.state[0]
         newY = self.state[1]
 
