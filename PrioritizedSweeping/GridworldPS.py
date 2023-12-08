@@ -30,7 +30,7 @@ def prioritizedSweeping():
 
     while iteration < maxIterations:
         state = states[0][0]
-        epsilon -= 1/(maxIterations+1)
+        epsilon = max(epsilon-1/(51),0.0001)
         iteration += 1
         while not state.checkEndState():
             action = eGreedyPolicy(state, epsilon)
@@ -73,17 +73,26 @@ def prioritizedSweeping():
 
 states = createGridworld()
 gamma = 0.9
-theta = 0.0001
+theta = 0.1
 alpha = 0.1
 optimalValueFunction = [[4.0187,4.5548,5.1575,5.8336,6.4553],[4.3716,5.0324,5.8013,6.6473,7.3907]
     ,[3.8672,4.3900,0,7.5769,8.4637],[3.4182,3.8319,0,8.5738,9.6946],[2.9977,2.9309,6.0733,9.6946,0]]
 
-maxIterations = 100
-N = 20
+maxIterations = 200
+N = 10
 
-MSEArray = prioritizedSweeping()
+Avg_MSE_array = [0]*maxIterations
+for _ in range(20):
+    Avg_MSE_array = [(a + b) for a, b in zip(prioritizedSweeping(), Avg_MSE_array)]
 
-plt.plot(range(maxIterations), MSEArray)
+for j in range(maxIterations):
+    Avg_MSE_array[j] /= 20
+
+plt.plot(range(maxIterations), Avg_MSE_array)
+plt.grid(True)
+plt.title("Average MSE Learning Curve")
+plt.ylabel("Average MSE")
+plt.xlabel("Episodes")
 plt.show()
 
 max_norm = 0
@@ -92,9 +101,11 @@ for i in range(len(states)):
         max_norm = max(abs(max(states[i][j].qValue)-optimalValueFunction[i][j]),max_norm)
 
 printActionValues(states)
+print("Learned Value Function")
 printMaxActionValues(states)
+print("Learned Policy")
 printPolicy(states)
-print("Max norm",max_norm)
+print("Max norm with Value Iteration result",max_norm)
 
 
 
