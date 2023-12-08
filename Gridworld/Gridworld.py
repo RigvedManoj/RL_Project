@@ -47,7 +47,9 @@ class GridWorldState:
         value = 0
         bestAction = 0
         for action in range(0, self.actionCount):
-            value = max(value, self.qValue[action] + c * math.sqrt(math.log(t, math.e) / self.visits[action]+1))
+            numerator = math.log(t, math.e)
+            denominator = self.visits[action]+1
+            value = max(value, self.qValue[action] + c * math.sqrt(numerator/denominator))
             self.actionProbabilities[action] = 0
             bestAction = action
         self.actionProbabilities[bestAction] = 1
