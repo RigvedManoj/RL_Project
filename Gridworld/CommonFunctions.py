@@ -1,18 +1,3 @@
-def clearStateValues(states):
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            state.value = 0
-            state.oldValue = 0
-
-
-def updateOldStateValues(states):
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            state.oldValue = state.value
-
-
 def initialiseActionValues(states, value=10):
     for i in range(0, len(states)):
         for j in range(0, len(states[i])):
@@ -44,33 +29,12 @@ def calculateMSE(states, optimalValues):
     return mse / count
 
 
-def calculateDelta(states):
-    delta = 0
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            if state.actionCount != 0:
-                delta = max(delta, abs(state.oldValue - state.value))
-    return delta
-
-
 def resetVisits(states):
     for i in range(0, len(states)):
         for j in range(0, len(states[i])):
             state = states[i][j]
             for action in range(state.actionCount):
                 state.visits[action] = 0
-
-
-def averageActionValues(states):
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            for action in range(state.actionCount):
-                if state.visits[action] != 0:
-                    state.qValue[action] = state.qValue[action] / state.visits[action]
-                state.qValue[action] = round(state.qValue[action], 4)
-            # state.qValue = [round(state.qValue[i] / max(state.visits[i], 1), 4) for i in range(len(state.qValue))]
 
 
 def printActionValues(states):
@@ -88,15 +52,6 @@ def printMaxActionValues(states):
             state = states[i][j]
             # state.qValue = [round(state.qValue[i] / max(state.visits[i], 1), 4) for i in range(len(state.qValue))]
             print("%.4f" % max(state.qValue), end="\t")
-        print(" ")
-    print(" ")
-
-
-def printStateValues(states):
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            print("%.4f" % round(state.value, 4), end="\t")
         print(" ")
     print(" ")
 
@@ -119,15 +74,6 @@ def resetVisitedStates(states):
             state.visited = [False, False, False, False]
 
 
-def printVisited(states):
-    for i in range(0, len(states)):
-        for j in range(0, len(states[i])):
-            state = states[i][j]
-            print(state.visited, end="\t")
-        print(" ")
-    print(" ")
-
-
 def printModel(states):
     for i in range(0, len(states)):
         for j in range(0, len(states[i])):
@@ -139,14 +85,6 @@ def printModel(states):
                     print(" ")
                 print(" ")
         print(" ")
-
-
-def printGrid(values, iterations):
-    for i in range(0, len(values)):
-        for j in range(0, len(values[i])):
-            print("%.4f" % round(values[i][j] / iterations, 4), end="\t")
-        print(" ")
-    print(" ")
 
 
 def printPolicy(states):

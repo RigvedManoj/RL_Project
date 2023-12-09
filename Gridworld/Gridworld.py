@@ -48,8 +48,8 @@ class GridWorldState:
         bestAction = 0
         for action in range(0, self.actionCount):
             numerator = math.log(t, math.e)
-            denominator = self.visits[action]+1
-            value = max(value, self.qValue[action] + c * math.sqrt(numerator/denominator))
+            denominator = self.visits[action] + 1
+            value = max(value, self.qValue[action] + c * math.sqrt(numerator / denominator))
             self.actionProbabilities[action] = 0
             bestAction = action
         self.actionProbabilities[bestAction] = 1
@@ -122,41 +122,6 @@ def createGridworld():
                 transitionUp = [0.05, 0.8, 0, 0.05, 0.1]  # left,up,down,right,same
                 transitionDown = [0.05, 0, 0.8, 0.05, 0.1]  # left,up,down,right,same
                 transitionRight = [0, 0.05, 0.05, 0.8, 0.1]  # left,up,down,right,same
-                s.setTransition([0, 1, 2, 3], [transitionLeft, transitionUp, transitionDown, transitionRight])
-                s.setReward(0)
-                # Set reward for Water State
-                if i == 4 and j == 2:
-                    s.setReward(-10)
-                tempStates.append(s)
-            # Set Goal State
-            else:
-                s = GridWorldState([i, j], 0, "EndState")
-                s.setReward(10)
-                s.qValue = [0, 0, 0, 0]
-                tempStates.append(s)
-        states.append(tempStates)
-    return states
-
-
-def createGridworld2():
-    states = []
-    for i in range(0, 5):
-        tempStates = []
-        for j in range(0, 5):
-            if i != 4 or j != 4:
-                # Set Obstacles
-                if (i == 2 or i == 3) and j == 2:
-                    s = GridWorldState([i, j], 0, "Obstacles")
-                    s.setReward(0)
-                    s.qValue = [0, 0, 0, 0]
-                    tempStates.append(s)
-                    continue
-                # Set all other States
-                s = GridWorldState([i, j], 4)
-                transitionLeft = [1, 0, 0, 0, 0]  # left,up,down,right,same
-                transitionUp = [0, 1, 0, 0, 0]  # left,up,down,right,same
-                transitionDown = [0, 0, 1, 0, 0]  # left,up,down,right,same
-                transitionRight = [0, 0, 0, 1, 0]  # left,up,down,right,same
                 s.setTransition([0, 1, 2, 3], [transitionLeft, transitionUp, transitionDown, transitionRight])
                 s.setReward(0)
                 # Set reward for Water State

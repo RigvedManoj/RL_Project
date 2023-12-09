@@ -3,19 +3,16 @@ import numpy
 from matplotlib import pyplot as plt
 
 
-def runMCTSEpisode(action, epsilon):
-    step = 0
-    endState = False
-    totalReward = 0
-    while not endState:
-        state, reward, endState, _, _ = env.step(action)
-        totalReward += reward
-        step += 1
-        if not endState:
-            action = takeAction(state, epsilon)
-        if abs(totalReward) > 1000:
-            break
-    return totalReward
+def printGrid(values):
+    for i in range(len(values)):
+        print(values[i], end="\t")
+    print(" ")
+
+
+def computeMean(state, action, reward):
+    visits[state][action] += 1
+    error = reward - qValues[state][action]
+    qValues[state][action] += error / visits[state][action]
 
 
 def takeAction(state, epsilon):
@@ -34,33 +31,33 @@ def takeAction(state, epsilon):
     return numpy.random.choice(numpy.arange(0, actionCount), p=actionProbabilities)
 
 
-def computeMean(state, action, reward):
-    visits[state][action] += 1
-    error = reward - qValues[state][action]
-    qValues[state][action] += error / visits[state][action]
+def runMCTSEpisode(action, epsilon):
+    step = 0
+    endState = False
+    totalReward = 0
+    while not endState:
+        state, reward, endState, _, _ = env.step(action)
+        totalReward += reward
+        step += 1
+        if not endState:
+            action = takeAction(state, epsilon)
+        if abs(totalReward) > rewardCap:
+            break
+    return totalReward
 
 
 def runMCTS(epsilon):
     state = 36
-    iterations = 0
-    maxIterations = 10
-    while iterations < maxIterations:
+    visitedStates = 0
+    while visitedStates < maxVisitedStates:
         env.reset()
-        iterations += 1
+        visitedStates += 1
         treeRecurse(state, epsilon, 0)
-    # printGrid(visited)
-    # printGrid(qValues)
-
-
-def printGrid(values):
-    for i in range(len(values)):
-        print(values[i], end="\t")
-    print(" ")
 
 
 def treeRecurse(state, epsilon, depth):
-    if depth > 200:
-        return -1000
+    if depth > depthCap:
+        return -rewardCap
     action = takeAction(state, epsilon)
     if not visited[state][action]:
         visited[state][action] = True
@@ -75,30 +72,74 @@ def treeRecurse(state, epsilon, depth):
     return reward
 
 
-TotalReturns = [0] * 100
+def resetValues():
+    for value in range(len(qValues)):
+        qValues[value] = [0, 0, 0, 0]
+        visits[value] = [0, 0, 0, 0]
+        visited[value] = [False, False, False, False]
+
+
+# Initialize Environment
 env = gym.make('CliffWalking-v0')
 qValues = [[0] * 4 for i in range(48)]
 visits = [[0] * 4 for j in range(48)]
 visited = [[False] * 4 for k in range(48)]
-env.reset()
-# runMCTSEpisode(0, 0.9)
-for i in range(100):
-    totalIterations = 0
-    totalMaxIterations = 100
-    stepSize = 1 / totalMaxIterations
-    print(i)
-    while totalIterations < totalMaxIterations:
-        totalIterations += 1
-        maxEpsilon = max(0.9 - stepSize * totalIterations, min(stepSize, 0.9))
-        runMCTS(maxEpsilon)
+
+
+def printPolicy():
+    for i in range(0, 4):
+        for j in range(0, 12):
+            state = 12 * i + j
+            action = qValues[state].index(max(qValues[state]))
+            if state > 36 and state < 47:
+                print(" ", end=" ")
+                continue
+            if state == 47:
+                print("G", end=" ")
+                continue
+            if action == 0:
+                print("\u2191", end=" ")
+            elif action == 1:
+                print("\u2192", end=" ")
+            elif action == 2:
+                print("\u2193", end=" ")
+            elif action == 3:
+                print("\u2190", end=" ")
+        print(" ")
+
+
+# HyperParameters
+totalIterations = 100
+eDecay = 1 / totalIterations
+maxEpsilon = 0.9
+rewardCap = 1000
+depthCap = 200
+maxVisitedStates = 50
+
+# Additional Parameters
+TotalReturns = [0] * totalIterations
+totalInitializations = 10
+
+# Run 10 times and take Average
+for m in range(totalInitializations):
+    env.reset()
+    resetValues()
+    iteration = 0
+    print("Iteration " + str(m) + " of " + str(totalInitializations))
+    while iteration < totalIterations:
+        iteration += 1
+        e = max(maxEpsilon - eDecay * iteration, min(eDecay, maxEpsilon))
+        runMCTS(e)
         env.reset()
-        TotalReturns[totalIterations - 1] += (runMCTSEpisode(takeAction(36, maxEpsilon), maxEpsilon))
+        TotalReturns[iteration - 1] += (runMCTSEpisode(takeAction(36, e), e))
 
-for i in range(0, 100):
-    TotalReturns[i] /= 100
+for m in range(0, totalIterations):
+    TotalReturns[m] /= totalInitializations
 
+print(TotalReturns[totalIterations - 1])
+printPolicy()
 plt.plot(range(len(TotalReturns)), TotalReturns)
 plt.title("Rewards over Episodes")
-plt.xlabel("Rewards")
-plt.ylabel("Episodes")
+plt.xlabel("Episodes")
+plt.ylabel("Rewards")
 plt.show()

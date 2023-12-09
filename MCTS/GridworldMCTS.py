@@ -1,9 +1,9 @@
 from Gridworld.CommonFunctions import *
-from Gridworld.Gridworld import createGridworld, createGridworld2
+from Gridworld.Gridworld import createGridworld, setInitialState
 from matplotlib import pyplot as plt
 
 
-def runMCTSEpisode(state, action, epsilon):
+def runMCTSEpisode(state, action):
     step = 0
     discountReturn = 0
     leafState = state
@@ -26,7 +26,7 @@ def computeMean(state, action, reward):
 
 def runMCTS(state, epsilon):
     iterations = 0
-    while not checkAllStateVisited(states) and iterations < 1000:
+    while not checkAllStateVisited(states) and iterations < 100:
         iterations += 1
         epsilon = epsilon - 0.002
         if epsilon < 0.002:
@@ -35,48 +35,78 @@ def runMCTS(state, epsilon):
     resetVisitedStates(states)
 
 
-def treeRecurse(state, confidence, depth):
-    if depth > 900:
+def treeRecurse(state, epsilon, depth):
+    if depth > 10:
         return 0
     if state.checkEndState():
         return state.reward
-    state.setActionUCB(confidence)
+    state.setActionProbabilities(epsilon)
     action = state.takeAction()
     if not state.visited[action]:
         state.visited[action] = True
-        reward = runMCTSEpisode(state, action, confidence)
+        reward = runMCTSEpisode(state, action)
         computeMean(state, action, reward)
     else:
         [x, y] = state.getNextState(action)
         nextState = states[x][y]
-        reward = treeRecurse(nextState, confidence, depth + 1)
+        reward = treeRecurse(nextState, epsilon, depth + 1)
         computeMean(state, action, reward)
     return gamma * reward
 
 
-states = createGridworld2()
-initialiseActionValues(states, 0)
+states = createGridworld()
 gamma = 0.9
-totalIterations = 0
-totalMaxIterations = 1
-while totalIterations < totalMaxIterations:
-    currentState = states[0][0]
-    steps = 0
-    totalIterations += 1
-    c = 10
-    while not currentState.checkEndState():
-        steps += 1
-        runMCTS(currentState, c)
-        averageActionValues(states)
-        resetVisits(states)
-        currentState.setActionUCB(0)
-        currentAction = currentState.takeAction()
-        print(currentState.state, currentAction, steps, currentState.qValue)
-        [nextX, nextY] = currentState.getNextState(currentAction)
-        currentState = states[nextX][nextY]
-"""
-    averageActionValues(states)
-    printActionValues(states)
-    printMaxActionValues(states)
-    printPolicy(states)
-"""
+optimalValueFunction = [[4.0187, 4.5548, 5.1575, 5.8336, 6.4553], [4.3716, 5.0324, 5.8013, 6.6473, 7.3907],
+                        [3.8672, 4.3900, 0, 7.5769, 8.4637], [3.4182, 3.8319, 0, 8.5738, 9.6946],
+                        [2.9977, 2.9309, 6.0733, 9.6946, 0]]
+
+totalInitializations = 10
+totalMaxIterations = 100
+stepSize = 1 / totalMaxIterations
+TotalRewards = [0] * totalMaxIterations
+MSE = [0] * totalMaxIterations
+
+for m in range(0, totalInitializations):
+    initialiseActionValues(states, 0)
+    resetVisitedStates(states)
+    resetVisits(states)
+    totalIterations = 0
+    print("Iteration " + str(m) + " of " + str(totalInitializations))
+    while totalIterations < totalMaxIterations:
+        [currentX, currentY] = setInitialState()
+        currentState = states[currentX][currentY]
+        steps = 0
+        totalIterations += 1
+        maxEpsilon = max(0.9 - stepSize * totalIterations, min(stepSize, 0.9))
+        while not currentState.checkEndState():
+            steps += 1
+            runMCTS(currentState, maxEpsilon)
+            currentState.setActionProbabilities(epsilon=0)
+            currentAction = currentState.takeAction()
+            [nextX, nextY] = currentState.getNextState(currentAction)
+            currentState = states[nextX][nextY]
+        TotalRewards[totalIterations - 1] += (runMCTSEpisode(states[0][0], states[0][0].takeAction()))
+        updateStateValuesFromActionValues(states, maxEpsilon)
+        MSE[totalIterations - 1] += (calculateMSE(states, optimalValueFunction))
+
+for i in range(1, len(TotalRewards)):
+    TotalRewards[i] += TotalRewards[i - 1]
+
+for m in range(0, totalMaxIterations):
+    TotalRewards[m] /= totalInitializations
+    MSE[m] /= totalInitializations
+
+printPolicy(states)
+
+
+plt.plot(range(len(TotalRewards)), TotalRewards)
+plt.title("Rewards over Episodes")
+plt.xlabel("Episodes")
+plt.ylabel("Rewards")
+plt.show()
+
+plt.plot(range(len(MSE)), MSE)
+plt.title("MSE over Episodes")
+plt.xlabel("Episodes")
+plt.ylabel("MSE")
+plt.show()
