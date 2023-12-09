@@ -136,8 +136,8 @@ for m in range(totalInitializations):
 for m in range(0, totalIterations):
     TotalReturns[m] /= totalInitializations
 
-print(TotalReturns[totalIterations - 1])
 printPolicy()
+
 plt.plot(range(len(TotalReturns)), TotalReturns)
 plt.title("Rewards over Episodes")
 plt.xlabel("Episodes")
